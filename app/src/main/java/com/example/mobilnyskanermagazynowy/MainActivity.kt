@@ -3,45 +3,63 @@ package com.example.mobilnyskanermagazynowy
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.mobilnyskanermagazynowy.ui.theme.MobilnySkanerMagazynowyTheme
+import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            MobilnySkanerMagazynowyTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+            MaterialTheme {
+                MainScreen()
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun MainScreen() {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Magazyn Części") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { /* TODO: Rozwiń opcje: Skanuj / Wpisz ręcznie */ }) {
+                Icon(Icons.Default.Add, contentDescription = "Dodaj część")
+            }
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("Magazyn jest pusty.")
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Użyj przycisku +, aby dodać asortyment.")
+        }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
-    MobilnySkanerMagazynowyTheme {
-        Greeting("Android")
+fun MainScreenPreview() {
+    MaterialTheme {
+        MainScreen()
     }
 }
