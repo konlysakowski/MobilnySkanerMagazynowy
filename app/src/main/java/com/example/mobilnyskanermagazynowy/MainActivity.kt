@@ -12,13 +12,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.ViewModelProvider
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val database = AppDatabase.getDatabase(this)
+        val factory = PartViewModelFactory(database.partDao())
+        val viewModel = ViewModelProvider(this, factory)[PartViewModel::class.java]
         setContent {
             MaterialTheme {
-                MainScreen()
+                MainScreen(viewModel)
             }
         }
     }
@@ -26,7 +34,8 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(viewModel: PartViewModel) {
+    val parts by viewModel.allParts.collectAsState()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -37,21 +46,50 @@ fun MainScreen() {
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { /* TODO: Rozwiń opcje: Skanuj / Wpisz ręcznie */ }) {
+            FloatingActionButton(onClick = { viewModel.addDummyPart() }) {
                 Icon(Icons.Default.Add, contentDescription = "Dodaj część")
             }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text("Magazyn jest pusty.")
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Użyj przycisku +, aby dodać asortyment.")
+        if (parts.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text("Magazyn jest pusty.")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Użyj przycisku +, aby dodać asortyment.")
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                items(parts) { part ->
+                    PartListItem(part)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PartListItem(part: PartItem) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = part.name, style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = "Kod: ${part.code}", style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Ilość: ${part.quantity} szt. | Lokalizacja: ${part.location}", style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -60,6 +98,5 @@ fun MainScreen() {
 @Composable
 fun MainScreenPreview() {
     MaterialTheme {
-        MainScreen()
     }
 }
