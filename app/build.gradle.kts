@@ -57,6 +57,18 @@ dependencies {
     implementation("androidx.room:room-runtime:$room_version")
     add("ksp", "androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
+
+    val camerax_version = "1.3.1"
+    implementation("androidx.camera:camera-core:$camerax_version")
+    implementation("androidx.camera:camera-camera2:$camerax_version")
+    implementation("androidx.camera:camera-lifecycle:$camerax_version")
+    implementation("androidx.camera:camera-view:$camerax_version")
+
+
+    implementation("com.google.mlkit:barcode-scanning:17.2.0")
+
+
+    implementation("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
 }
 
 ksp {

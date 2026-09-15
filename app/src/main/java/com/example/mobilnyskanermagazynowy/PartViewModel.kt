@@ -29,6 +29,17 @@ class PartViewModel(private val dao: PartDao) : ViewModel() {
             dao.insertPart(newPart)
         }
     }
+    fun addScannedPart(scannedCode: String) {
+        viewModelScope.launch {
+            val newPart = PartItem(
+                code = scannedCode,
+                name = "Skan: Część Magazynowa",
+                quantity = 1,
+                location = "Do weryfikacji"
+            )
+            dao.insertPart(newPart)
+        }
+    }
 }
 
 class PartViewModelFactory(private val dao: PartDao) : ViewModelProvider.Factory {

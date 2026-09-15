@@ -16,6 +16,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModelProvider
 
 class MainActivity : ComponentActivity() {
@@ -36,41 +39,52 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(viewModel: PartViewModel) {
     val parts by viewModel.allParts.collectAsState()
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Magazyn Części") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+    var showScanner by remember { mutableStateOf(false) }
+
+    if (showScanner) {
+        QRScannerScreen(
+            onCodeScanned = { scannedCode ->
+                viewModel.addScannedPart(scannedCode)
+                showScanner = false
+            }
+        )
+    } else {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Magazyn Części") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
                 )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { viewModel.addDummyPart() }) {
-                Icon(Icons.Default.Add, contentDescription = "Dodaj część")
+            },
+            floatingActionButton = {
+                FloatingActionButton(onClick = { showScanner = true }) {
+                    Icon(Icons.Default.Add, contentDescription = "Skanuj kod")
+                }
             }
-        }
-    ) { paddingValues ->
-        if (parts.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text("Magazyn jest pusty.")
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Użyj przycisku +, aby dodać asortyment.")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                items(parts) { part ->
-                    PartListItem(part)
+        ) { paddingValues ->
+            if (parts.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text("Magazyn jest pusty.")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Użyj przycisku +, aby zeskanować asortyment.")
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    items(parts) { part ->
+                        PartListItem(part)
+                    }
                 }
             }
         }
