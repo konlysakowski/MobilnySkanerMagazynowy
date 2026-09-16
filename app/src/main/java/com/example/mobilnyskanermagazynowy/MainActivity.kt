@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,12 +41,26 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(viewModel: PartViewModel) {
     val parts by viewModel.allParts.collectAsState()
     var showScanner by remember { mutableStateOf(false) }
+    var scannedCodeToProcess by remember { mutableStateOf<String?>(null) }
+
+    scannedCodeToProcess?.let { code ->
+        AddPartDialog(
+            scannedCode = code,
+            onDismiss = { scannedCodeToProcess = null },
+            onConfirm = { name, qty, loc ->
+                viewModel.addScannedPart(code, name, qty, loc)
+                scannedCodeToProcess = null
+            }
+        )
+    }
 
     if (showScanner) {
         QRScannerScreen(
             onCodeScanned = { scannedCode ->
-                viewModel.addScannedPart(scannedCode)
                 showScanner = false
+                viewModel.checkAndProcessCode(scannedCode) {
+                    scannedCodeToProcess = scannedCode
+                }
             }
         )
     } else {
@@ -83,7 +98,7 @@ fun MainScreen(viewModel: PartViewModel) {
                         .padding(paddingValues)
                 ) {
                     items(parts) { part ->
-                        PartListItem(part)
+                        PartListItem(part, onDelete = {viewModel.deletePart(part) })
                     }
                 }
             }
@@ -92,18 +107,33 @@ fun MainScreen(viewModel: PartViewModel) {
 }
 
 @Composable
-fun PartListItem(part: PartItem) {
+fun PartListItem(part: PartItem, onDelete: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = part.name, style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Kod: ${part.code}", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Ilość: ${part.quantity} szt. | Lokalizacja: ${part.location}", style = MaterialTheme.typography.bodySmall)
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(text = part.name, style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "Kod: ${part.code}", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = "Ilość: ${part.quantity} szt. | Lokalizacja: ${part.location}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    androidx.compose.material.icons.Icons.Default.Delete,
+                    contentDescription = "Usuń"
+                )
+            }
         }
     }
 }
@@ -113,4 +143,59 @@ fun PartListItem(part: PartItem) {
 fun MainScreenPreview() {
     MaterialTheme {
     }
+}
+
+@Composable
+fun AddPartDialog(
+    scannedCode: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String, Int, String) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var quantity by remember { mutableStateOf("1") }
+    var location by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Dodaj nowy produkt") },
+        text = {
+            Column {
+                Text("Zeskanowany kod: $scannedCode")
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Nazwa produktu") },
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = quantity,
+                    onValueChange = { quantity = it },
+                    label = { Text("Ilość (szt.)") },
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = { location = it },
+                    label = { Text("Lokalizacja (np. Półka 1)") },
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                val qtyInt = quantity.toIntOrNull() ?: 1
+                onConfirm(name, qtyInt, location)
+            }) {
+                Text("Zapisz w bazie")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Anuluj")
+            }
+        }
+    )
 }

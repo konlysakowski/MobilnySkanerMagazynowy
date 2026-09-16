@@ -1,6 +1,7 @@
 package com.example.mobilnyskanermagazynowy
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -16,4 +17,10 @@ interface PartDao {
 
     @Query("UPDATE parts_table SET quantity = :newQty WHERE code = :partCode")
     suspend fun updateQuantity(partCode: String, newQty: Int) : Int
+
+    @Query("SELECT * FROM parts_table WHERE code = :code LIMIT 1")
+    suspend fun getPartByCode(code: String): PartItem?
+
+    @Delete
+    suspend fun deletePart(part: PartItem) : Int
 }

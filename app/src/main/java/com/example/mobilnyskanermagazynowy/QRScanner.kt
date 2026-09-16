@@ -70,7 +70,7 @@ fun CameraPreview(onCodeScanned: (String) -> Unit) {
 
                 val scanner = BarcodeScanning.getClient(
                     BarcodeScannerOptions.Builder()
-                        .setBarcodeFormats(Barcode.FORMAT_QR_CODE, Barcode.FORMAT_CODE_128)
+                        .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
                         .build()
                 )
 

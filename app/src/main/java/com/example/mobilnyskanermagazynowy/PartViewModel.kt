@@ -10,7 +10,6 @@ import kotlinx.coroutines.launch
 
 class PartViewModel(private val dao: PartDao) : ViewModel() {
 
-    // Pobieranie listy z bazy danych na żywo
     val allParts: StateFlow<List<PartItem>> = dao.getAllParts()
         .stateIn(
             scope = viewModelScope,
@@ -29,15 +28,32 @@ class PartViewModel(private val dao: PartDao) : ViewModel() {
             dao.insertPart(newPart)
         }
     }
-    fun addScannedPart(scannedCode: String) {
+    fun addScannedPart(scannedCode: String, name: String, quantity: Int, location: String) {
         viewModelScope.launch {
             val newPart = PartItem(
                 code = scannedCode,
-                name = "Skan: Część Magazynowa",
-                quantity = 1,
-                location = "Do weryfikacji"
+                name = name,
+                quantity = quantity,
+                location = location
             )
             dao.insertPart(newPart)
+        }
+    }
+
+    fun checkAndProcessCode(scannedCode: String, onNewCode: () -> Unit) {
+        viewModelScope.launch {
+            val existingPart = dao.getPartByCode(scannedCode)
+            if (existingPart != null) {
+                dao.updateQuantity(scannedCode, existingPart.quantity + 1)
+            } else {
+                onNewCode()
+            }
+        }
+    }
+
+    fun deletePart(part: PartItem) {
+        viewModelScope.launch {
+            dao.deletePart(part)
         }
     }
 }
